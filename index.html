@@ -1,590 +1,457 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Infus Pump Monitoring</title>
-
-    <!-- Firebase -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import {
-            getDatabase,
-            ref,
-            set,
-            onValue
-        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-        // ==============================
-        // KONFIGURASI FIREBASE
-        // ==============================
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBHI_FW51I3Vn240-5VNuHxFL_Zn90WT6M",
-            authDomain: "infustpump-distra.firebaseapp.com",
-            databaseURL: "https://infustpump-distra-default-rtdb.firebaseio.com",
-            projectId: "infustpump-distra",
-            storageBucket: "infustpump-distra.firebasestorage.app",
-            messagingSenderId: "1006570621710",
-            appId: "1:1006570621710:web:ff3fa793e933d36acee55f",
-            measurementId: "G-52ZL8LRNXY"
-        };
-
-        // ==============================
-        // INISIALISASI FIREBASE
-        // ==============================
-
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-
-        // Referensi database
-        const inputFlowRef = ref(database, "inputFlow");
-        const flowRef = ref(database, "flow");
-        const statusRef = ref(database, "status");
-
-        // ==============================
-        // MEMBACA INPUT FLOW
-        // ==============================
-
-        onValue(inputFlowRef, (snapshot) => {
-
-            const value = snapshot.val();
-
-            if (value !== null) {
-                document.getElementById("inputFlow").value = value;
-            }
-
-        });
-
-        // ==============================
-        // MEMBACA FLOW AKTUAL
-        // ==============================
-
-        onValue(flowRef, (snapshot) => {
-
-            const value = snapshot.val();
-
-            if (value !== null) {
-                document.getElementById("flowValue").innerText =
-                    value + " mL/h";
-            }
-
-        });
-
-        // ==============================
-        // MEMBACA STATUS INFUS
-        // ==============================
-
-        onValue(statusRef, (snapshot) => {
-
-            const value = snapshot.val();
-
-            if (value !== null) {
-
-                const status = String(value).toUpperCase();
-
-                const statusElement =
-                    document.getElementById("statusValue");
-
-                statusElement.innerText = status;
-
-                // RUNNING
-                if (status === "RUNNING") {
-
-                    statusElement.className =
-                        "status running";
-
-                }
-
-                // STOPPED
-                else if (status === "STOPPED") {
-
-                    statusElement.className =
-                        "status stopped";
-
-                }
-
-                // ALARM
-                else {
-
-                    statusElement.className =
-                        "status alarm";
-
-                }
-            }
-
-        });
-
-        // ==============================
-        // TOMBOL SET FLOW
-        // ==============================
-
-        window.setFlow = function () {
-
-            const input =
-                document.getElementById("inputFlow");
-
-            const value =
-                Number(input.value);
-
-            // Validasi
-            if (isNaN(value) || value < 1 || value > 120) {
-
-                alert(
-                    "Flow harus berada antara 1 - 120 mL/h"
-                );
-
-                return;
-            }
-
-            // Simpan ke Firebase
-            set(inputFlowRef, value)
-                .then(() => {
-
-                    alert(
-                        "Input Flow berhasil disimpan: "
-                        + value
-                        + " mL/h"
-                    );
-
-                })
-                .catch((error) => {
-
-                    console.error(error);
-
-                    alert(
-                        "Gagal menyimpan data Firebase."
-                    );
-
-                });
-        };
-
-    </script>
-
-    <!-- ==============================
-         CSS
-    =============================== -->
-
-    <style>
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-
-            font-family:
-                Arial,
-                Helvetica,
-                sans-serif;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #eef4ff,
-                    #f8fbff
-                );
-
-            min-height: 100vh;
-
-            color: #1e293b;
-        }
-
-        /* HEADER */
-
-        header {
-
-            background: white;
-
-            padding: 20px 30px;
-
-            box-shadow:
-                0 2px 10px
-                rgba(0,0,0,0.08);
-
-            text-align: center;
-        }
-
-        header h1 {
-
-            font-size: 28px;
-
-            color: #1d4ed8;
-
-            margin-bottom: 5px;
-        }
-
-        header p {
-
-            color: #64748b;
-
-            font-size: 14px;
-        }
-
-        /* CONTAINER */
-
-        .container {
-
-            width: 90%;
-
-            max-width: 1100px;
-
-            margin:
-                40px auto;
-        }
-
-        /* CARD AREA */
-
-        .cards {
-
-            display: grid;
-
-            grid-template-columns:
-                repeat(
-                    3,
-                    1fr
-                );
-
-            gap: 25px;
-        }
-
-        /* CARD */
-
-        .card {
-
-            background: white;
-
-            border-radius: 18px;
-
-            padding: 30px;
-
-            text-align: center;
-
-            box-shadow:
-                0 8px 25px
-                rgba(0,0,0,0.08);
-
-            transition:
-                transform 0.2s;
-        }
-
-        .card:hover {
-
-            transform:
-                translateY(-5px);
-        }
-
-        .icon {
-
-            font-size: 45px;
-
-            margin-bottom: 15px;
-        }
-
-        .card h2 {
-
-            font-size: 18px;
-
-            margin-bottom: 20px;
-
-            color: #475569;
-        }
-
-        /* INPUT */
-
-        .input-box {
-
-            width: 100%;
-
-            padding: 15px;
-
-            border:
-                2px solid #cbd5e1;
-
-            border-radius: 10px;
-
-            font-size: 22px;
-
-            text-align: center;
-
-            outline: none;
-        }
-
-        .input-box:focus {
-
-            border-color:
-                #2563eb;
-        }
-
-        .unit {
-
-            margin-top: 8px;
-
-            color: #64748b;
-
-            font-size: 14px;
-        }
-
-        /* BUTTON */
-
-        .button {
-
-            width: 100%;
-
-            margin-top: 20px;
-
-            padding: 14px;
-
-            border: none;
-
-            border-radius: 10px;
-
-            background:
-                #2563eb;
-
-            color: white;
-
-            font-size: 16px;
-
-            font-weight: bold;
-
-            cursor: pointer;
-        }
-
-        .button:hover {
-
-            background:
-                #1d4ed8;
-        }
-
-        /* FLOW */
-
-        .flow-value {
-
-            font-size: 38px;
-
-            font-weight: bold;
-
-            color: #2563eb;
-
-            margin-top: 30px;
-        }
-
-        /* STATUS */
-
-        .status {
-
-            display: inline-block;
-
-            padding:
-                12px 25px;
-
-            border-radius: 30px;
-
-            font-size: 20px;
-
-            font-weight: bold;
-
-            margin-top: 25px;
-        }
-
-        .running {
-
-            background:
-                #dcfce7;
-
-            color:
-                #15803d;
-        }
-
-        .stopped {
-
-            background:
-                #f1f5f9;
-
-            color:
-                #475569;
-        }
-
-        .alarm {
-
-            background:
-                #fee2e2;
-
-            color:
-                #dc2626;
-        }
-
-        /* FOOTER */
-
-        footer {
-
-            text-align: center;
-
-            margin-top: 50px;
-
-            color: #64748b;
-
-            font-size: 13px;
-        }
-
-        /* RESPONSIVE */
-
-        @media (max-width: 800px) {
-
-            .cards {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-            header h1 {
-
-                font-size: 23px;
-            }
-
-            .container {
-
-                margin-top: 25px;
-            }
-        }
-
-    </style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Monitor Infus Pump</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #e8f5ff, #f8fbff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .header {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      color: #0879b8;
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #777;
+      font-size: 15px;
+    }
+
+    .status {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 10px 25px;
+      border-radius: 30px;
+      font-weight: bold;
+      font-size: 16px;
+      background: #eeeeee;
+      color: #555;
+    }
+
+    .status.running {
+      background: #d9f8e3;
+      color: #159447;
+    }
+
+    .status.stopped {
+      background: #ffe0e0;
+      color: #d93030;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    }
+
+    .icon {
+      font-size: 45px;
+      margin-bottom: 12px;
+    }
+
+    .card h2 {
+      color: #555;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .value {
+      font-size: 42px;
+      font-weight: bold;
+      color: #0879b8;
+    }
+
+    .unit {
+      font-size: 18px;
+      color: #777;
+      margin-left: 5px;
+    }
+
+    .target {
+      margin-top: 12px;
+      color: #888;
+      font-size: 14px;
+    }
+
+    .remaining-box {
+      margin-top: 20px;
+      background: #f1f8fc;
+      border-radius: 15px;
+      padding: 15px;
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 18px;
+      background: #e0e0e0;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress {
+      width: 0%;
+      height: 100%;
+      background: #159bd3;
+      border-radius: 20px;
+      transition: width 0.5s ease;
+    }
+
+    .footer {
+      text-align: center;
+      color: #888;
+      font-size: 13px;
+      margin-top: 20px;
+    }
+
+    .connection {
+      margin-top: 8px;
+    }
+
+    .online {
+      color: #159447;
+      font-weight: bold;
+    }
+
+    .offline {
+      color: #d93030;
+      font-weight: bold;
+    }
+
+    @media (max-width: 650px) {
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .header h1 {
+        font-size: 25px;
+      }
+
+      .value {
+        font-size: 36px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-    <!-- ==============================
-         HEADER
-    =============================== -->
+  <div class="container">
 
-    <header>
+    <!-- HEADER -->
+    <div class="header">
 
-        <h1>
-            💧 INFUS PUMP MONITORING
-        </h1>
+      <h1>💧 MONITOR INFUS PUMP</h1>
 
-        <p>
-            Sistem Monitoring Infus Berbasis IoT
-        </p>
+      <p>Monitoring Kecepatan dan Sisa Cairan Infus</p>
 
-    </header>
+      <div id="status" class="status">
+        ● MENGHUBUNGKAN...
+      </div>
 
-
-    <!-- ==============================
-         CONTENT
-    =============================== -->
-
-    <main class="container">
-
-        <div class="cards">
-
-            <!-- INPUT FLOW -->
-
-            <div class="card">
-
-                <div class="icon">
-                    ⚙️
-                </div>
-
-                <h2>
-                    INPUT FLOW
-                </h2>
-
-                <input
-                    id="inputFlow"
-                    class="input-box"
-                    type="number"
-                    min="1"
-                    max="120"
-                    value="20"
-                    placeholder="Masukkan Flow"
-                >
-
-                <div class="unit">
-                    mL/h
-                </div>
-
-                <button
-                    class="button"
-                    onclick="setFlow()"
-                >
-                    SET FLOW
-                </button>
-
-            </div>
+    </div>
 
 
-            <!-- FLOW AKTUAL -->
+    <!-- DATA -->
+    <div class="cards">
 
-            <div class="card">
+      <!-- KECEPATAN AKTUAL -->
+      <div class="card">
 
-                <div class="icon">
-                    💧
-                </div>
+        <div class="icon">⚡</div>
 
-                <h2>
-                    FLOW AKTUAL
-                </h2>
+        <h2>KECEPATAN INFUS</h2>
 
-                <div
-                    id="flowValue"
-                    class="flow-value"
-                >
-                    0 mL/h
-                </div>
+        <div>
+          <span id="flow" class="value">0</span>
+          <span class="unit">mL/h</span>
+        </div>
 
-                <div class="unit">
-                    Pembacaan Flow
-                </div>
+        <div class="target">
+          Pengaturan: <b><span id="inputFlow">0</span> mL/h</b>
+        </div>
 
-            </div>
+      </div>
 
 
-            <!-- STATUS INFUS -->
+      <!-- SISA INFUS -->
+      <div class="card">
 
-            <div class="card">
+        <div class="icon">🧴</div>
 
-                <div class="icon">
-                    🩺
-                </div>
+        <h2>SISA CAIRAN INFUS</h2>
 
-                <h2>
-                    STATUS INFUS
-                </h2>
+        <div>
+          <span id="remaining" class="value">0</span>
+          <span class="unit">mL</span>
+        </div>
 
-                <div
-                    id="statusValue"
-                    class="status stopped"
-                >
-                    STOPPED
-                </div>
+        <div class="remaining-box">
 
-                <div class="unit">
-                    Status Pompa
-                </div>
+          <div>
+            Sisa cairan
+          </div>
 
-            </div>
+          <div class="progress-container">
+            <div id="progress" class="progress"></div>
+          </div>
+
+          <div style="margin-top:8px;">
+            <span id="percentage">0</span>%
+          </div>
 
         </div>
 
+      </div>
 
-        <!-- FOOTER -->
+    </div>
 
-        <footer>
 
-            Infus Pump Monitoring System<br>
+    <!-- FOOTER -->
+    <div class="footer">
 
-            ESP32 • Firebase • IoT
+      <div>
+        Sistem Monitoring Infus Pump Berbasis IoT
+      </div>
 
-        </footer>
+      <div class="connection">
+        Koneksi Firebase:
+        <span id="connection" class="offline">
+          Menghubungkan...
+        </span>
+      </div>
 
-    </main>
+    </div>
+
+  </div>
+
+
+  <script>
+
+    // ==========================================
+    // FIREBASE CONFIGURATION
+    // ==========================================
+
+    const firebaseConfig = {
+
+      apiKey: "AIzaSyBHI_FW51I3Nv240-5VNuHxFL_Zn90WT6M",
+
+      authDomain: "infuspump-distra.firebaseapp.com",
+
+      databaseURL:
+        "https://infuspump-distra-default-rtdb.firebaseio.com",
+
+      projectId: "infuspump-distra",
+
+      storageBucket:
+        "infuspump-distra.firebasestorage.app",
+
+      messagingSenderId: "1006570621710",
+
+      appId:
+        "1:1006570621710:web:ff3fa793e933d36acee55f",
+
+      measurementId: "G-52ZL8LRNXY"
+
+    };
+
+
+    // ==========================================
+    // INITIALIZE FIREBASE
+    // ==========================================
+
+    firebase.initializeApp(firebaseConfig);
+
+    const database = firebase.database();
+
+
+    // ==========================================
+    // REFERENSI DATA FIREBASE
+    // ==========================================
+
+    const dbRef = database.ref();
+
+
+    // ==========================================
+    // MEMBACA DATA REALTIME
+    // ==========================================
+
+    dbRef.on("value", function(snapshot) {
+
+      const data = snapshot.val();
+
+      if (!data) {
+        console.log("Data Firebase kosong");
+        return;
+      }
+
+
+      // ------------------------------------------
+      // FLOW AKTUAL
+      // ------------------------------------------
+
+      let flow = Number(data.flow || 0);
+
+      document.getElementById("flow").innerText =
+        flow.toFixed(0);
+
+
+      // ------------------------------------------
+      // INPUT FLOW
+      // ------------------------------------------
+
+      let inputFlow = Number(data.inputFlow || 0);
+
+      document.getElementById("inputFlow").innerText =
+        inputFlow.toFixed(0);
+
+
+      // ------------------------------------------
+      // SISA CAIRAN
+      // ------------------------------------------
+
+      let remaining = Number(data.remaining || 0);
+
+      document.getElementById("remaining").innerText =
+        remaining.toFixed(0);
+
+
+      // ------------------------------------------
+      // STATUS
+      // ------------------------------------------
+
+      let status = String(data.status || "STOPPED");
+
+      const statusElement =
+        document.getElementById("status");
+
+
+      if (status.toUpperCase() === "RUNNING") {
+
+        statusElement.innerText = "● INFUS BERJALAN";
+
+        statusElement.className =
+          "status running";
+
+      } else {
+
+        statusElement.innerText = "● INFUS BERHENTI";
+
+        statusElement.className =
+          "status stopped";
+
+      }
+
+
+      // ------------------------------------------
+      // PROGRESS SISA INFUS
+      // ------------------------------------------
+
+      // Kapasitas awal infus.
+      // Silakan ubah misalnya 500 jika menggunakan
+      // botol infus 500 mL.
+
+      const kapasitasAwal = 500;
+
+      let percentage =
+        (remaining / kapasitasAwal) * 100;
+
+
+      // Batasi 0 - 100%
+
+      if (percentage > 100) {
+        percentage = 100;
+      }
+
+      if (percentage < 0) {
+        percentage = 0;
+      }
+
+
+      document.getElementById("percentage").innerText =
+        percentage.toFixed(0);
+
+
+      document.getElementById("progress").style.width =
+        percentage + "%";
+
+    });
+
+
+    // ==========================================
+    // CEK KONEKSI FIREBASE
+    // ==========================================
+
+    const connectedRef =
+      database.ref(".info/connected");
+
+
+    connectedRef.on("value", function(snapshot) {
+
+      const connection =
+        document.getElementById("connection");
+
+
+      if (snapshot.val() === true) {
+
+        connection.innerText = "ONLINE";
+
+        connection.className = "online";
+
+      } else {
+
+        connection.innerText = "OFFLINE";
+
+        connection.className = "offline";
+
+      }
+
+    });
+
+  </script>
 
 </body>
-
 </html>
