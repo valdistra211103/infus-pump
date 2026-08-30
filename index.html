@@ -1,1 +1,590 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>Infus Pump Monitoring</title>
+
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import {
+            getDatabase,
+            ref,
+            set,
+            onValue
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        // ==============================
+        // KONFIGURASI FIREBASE
+        // ==============================
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBHI_FW51I3Vn240-5VNuHxFL_Zn90WT6M",
+            authDomain: "infustpump-distra.firebaseapp.com",
+            databaseURL: "https://infustpump-distra-default-rtdb.firebaseio.com",
+            projectId: "infustpump-distra",
+            storageBucket: "infustpump-distra.firebasestorage.app",
+            messagingSenderId: "1006570621710",
+            appId: "1:1006570621710:web:ff3fa793e933d36acee55f",
+            measurementId: "G-52ZL8LRNXY"
+        };
+
+        // ==============================
+        // INISIALISASI FIREBASE
+        // ==============================
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Referensi database
+        const inputFlowRef = ref(database, "inputFlow");
+        const flowRef = ref(database, "flow");
+        const statusRef = ref(database, "status");
+
+        // ==============================
+        // MEMBACA INPUT FLOW
+        // ==============================
+
+        onValue(inputFlowRef, (snapshot) => {
+
+            const value = snapshot.val();
+
+            if (value !== null) {
+                document.getElementById("inputFlow").value = value;
+            }
+
+        });
+
+        // ==============================
+        // MEMBACA FLOW AKTUAL
+        // ==============================
+
+        onValue(flowRef, (snapshot) => {
+
+            const value = snapshot.val();
+
+            if (value !== null) {
+                document.getElementById("flowValue").innerText =
+                    value + " mL/h";
+            }
+
+        });
+
+        // ==============================
+        // MEMBACA STATUS INFUS
+        // ==============================
+
+        onValue(statusRef, (snapshot) => {
+
+            const value = snapshot.val();
+
+            if (value !== null) {
+
+                const status = String(value).toUpperCase();
+
+                const statusElement =
+                    document.getElementById("statusValue");
+
+                statusElement.innerText = status;
+
+                // RUNNING
+                if (status === "RUNNING") {
+
+                    statusElement.className =
+                        "status running";
+
+                }
+
+                // STOPPED
+                else if (status === "STOPPED") {
+
+                    statusElement.className =
+                        "status stopped";
+
+                }
+
+                // ALARM
+                else {
+
+                    statusElement.className =
+                        "status alarm";
+
+                }
+            }
+
+        });
+
+        // ==============================
+        // TOMBOL SET FLOW
+        // ==============================
+
+        window.setFlow = function () {
+
+            const input =
+                document.getElementById("inputFlow");
+
+            const value =
+                Number(input.value);
+
+            // Validasi
+            if (isNaN(value) || value < 1 || value > 120) {
+
+                alert(
+                    "Flow harus berada antara 1 - 120 mL/h"
+                );
+
+                return;
+            }
+
+            // Simpan ke Firebase
+            set(inputFlowRef, value)
+                .then(() => {
+
+                    alert(
+                        "Input Flow berhasil disimpan: "
+                        + value
+                        + " mL/h"
+                    );
+
+                })
+                .catch((error) => {
+
+                    console.error(error);
+
+                    alert(
+                        "Gagal menyimpan data Firebase."
+                    );
+
+                });
+        };
+
+    </script>
+
+    <!-- ==============================
+         CSS
+    =============================== -->
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #eef4ff,
+                    #f8fbff
+                );
+
+            min-height: 100vh;
+
+            color: #1e293b;
+        }
+
+        /* HEADER */
+
+        header {
+
+            background: white;
+
+            padding: 20px 30px;
+
+            box-shadow:
+                0 2px 10px
+                rgba(0,0,0,0.08);
+
+            text-align: center;
+        }
+
+        header h1 {
+
+            font-size: 28px;
+
+            color: #1d4ed8;
+
+            margin-bottom: 5px;
+        }
+
+        header p {
+
+            color: #64748b;
+
+            font-size: 14px;
+        }
+
+        /* CONTAINER */
+
+        .container {
+
+            width: 90%;
+
+            max-width: 1100px;
+
+            margin:
+                40px auto;
+        }
+
+        /* CARD AREA */
+
+        .cards {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    1fr
+                );
+
+            gap: 25px;
+        }
+
+        /* CARD */
+
+        .card {
+
+            background: white;
+
+            border-radius: 18px;
+
+            padding: 30px;
+
+            text-align: center;
+
+            box-shadow:
+                0 8px 25px
+                rgba(0,0,0,0.08);
+
+            transition:
+                transform 0.2s;
+        }
+
+        .card:hover {
+
+            transform:
+                translateY(-5px);
+        }
+
+        .icon {
+
+            font-size: 45px;
+
+            margin-bottom: 15px;
+        }
+
+        .card h2 {
+
+            font-size: 18px;
+
+            margin-bottom: 20px;
+
+            color: #475569;
+        }
+
+        /* INPUT */
+
+        .input-box {
+
+            width: 100%;
+
+            padding: 15px;
+
+            border:
+                2px solid #cbd5e1;
+
+            border-radius: 10px;
+
+            font-size: 22px;
+
+            text-align: center;
+
+            outline: none;
+        }
+
+        .input-box:focus {
+
+            border-color:
+                #2563eb;
+        }
+
+        .unit {
+
+            margin-top: 8px;
+
+            color: #64748b;
+
+            font-size: 14px;
+        }
+
+        /* BUTTON */
+
+        .button {
+
+            width: 100%;
+
+            margin-top: 20px;
+
+            padding: 14px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background:
+                #2563eb;
+
+            color: white;
+
+            font-size: 16px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+        }
+
+        .button:hover {
+
+            background:
+                #1d4ed8;
+        }
+
+        /* FLOW */
+
+        .flow-value {
+
+            font-size: 38px;
+
+            font-weight: bold;
+
+            color: #2563eb;
+
+            margin-top: 30px;
+        }
+
+        /* STATUS */
+
+        .status {
+
+            display: inline-block;
+
+            padding:
+                12px 25px;
+
+            border-radius: 30px;
+
+            font-size: 20px;
+
+            font-weight: bold;
+
+            margin-top: 25px;
+        }
+
+        .running {
+
+            background:
+                #dcfce7;
+
+            color:
+                #15803d;
+        }
+
+        .stopped {
+
+            background:
+                #f1f5f9;
+
+            color:
+                #475569;
+        }
+
+        .alarm {
+
+            background:
+                #fee2e2;
+
+            color:
+                #dc2626;
+        }
+
+        /* FOOTER */
+
+        footer {
+
+            text-align: center;
+
+            margin-top: 50px;
+
+            color: #64748b;
+
+            font-size: 13px;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 800px) {
+
+            .cards {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+            header h1 {
+
+                font-size: 23px;
+            }
+
+            .container {
+
+                margin-top: 25px;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <!-- ==============================
+         HEADER
+    =============================== -->
+
+    <header>
+
+        <h1>
+            💧 INFUS PUMP MONITORING
+        </h1>
+
+        <p>
+            Sistem Monitoring Infus Berbasis IoT
+        </p>
+
+    </header>
+
+
+    <!-- ==============================
+         CONTENT
+    =============================== -->
+
+    <main class="container">
+
+        <div class="cards">
+
+            <!-- INPUT FLOW -->
+
+            <div class="card">
+
+                <div class="icon">
+                    ⚙️
+                </div>
+
+                <h2>
+                    INPUT FLOW
+                </h2>
+
+                <input
+                    id="inputFlow"
+                    class="input-box"
+                    type="number"
+                    min="1"
+                    max="120"
+                    value="20"
+                    placeholder="Masukkan Flow"
+                >
+
+                <div class="unit">
+                    mL/h
+                </div>
+
+                <button
+                    class="button"
+                    onclick="setFlow()"
+                >
+                    SET FLOW
+                </button>
+
+            </div>
+
+
+            <!-- FLOW AKTUAL -->
+
+            <div class="card">
+
+                <div class="icon">
+                    💧
+                </div>
+
+                <h2>
+                    FLOW AKTUAL
+                </h2>
+
+                <div
+                    id="flowValue"
+                    class="flow-value"
+                >
+                    0 mL/h
+                </div>
+
+                <div class="unit">
+                    Pembacaan Flow
+                </div>
+
+            </div>
+
+
+            <!-- STATUS INFUS -->
+
+            <div class="card">
+
+                <div class="icon">
+                    🩺
+                </div>
+
+                <h2>
+                    STATUS INFUS
+                </h2>
+
+                <div
+                    id="statusValue"
+                    class="status stopped"
+                >
+                    STOPPED
+                </div>
+
+                <div class="unit">
+                    Status Pompa
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- FOOTER -->
+
+        <footer>
+
+            Infus Pump Monitoring System<br>
+
+            ESP32 • Firebase • IoT
+
+        </footer>
+
+    </main>
+
+</body>
+
+</html>
